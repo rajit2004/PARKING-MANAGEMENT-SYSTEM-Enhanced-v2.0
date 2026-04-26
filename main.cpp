@@ -217,3 +217,102 @@ public:
     }
 };
 
+// ============================================================
+//  CLASS: Vehicle
+// ============================================================
+class Vehicle {
+    int    token;
+    string owner;
+    string vno;
+    Time   inT, outT;
+    Date   date;
+    int    durationHours;
+    bool   isCar;
+
+public:
+    // New vehicle (minimal constructor — call inputDetails() after)
+    Vehicle(int t, bool car) : token(t), durationHours(0), isCar(car) {}
+
+    // Reconstruct from saved file data
+    Vehicle(int t, string o, string v, bool car,
+            int h1, int m1, int s1,
+            int h2, int m2, int s2,
+            int dd, int mm, int yy)
+        : token(t), owner(move(o)), vno(move(v)),
+          durationHours(0), isCar(car)
+    {
+        inT  = {h1, m1, s1};
+        outT = {h2, m2, s2};
+        date = {dd, mm, yy};
+        calcDuration();
+    }
+
+    // ---- Accessors ----
+    int    getToken()  const { return token; }
+    string getVNo()    const { return vno;   }
+    bool   getIsCar()  const { return isCar; }
+    void   setVNo(const string& v) { vno = v; }
+
+    // ---- Rush hour check ----
+    static bool isRushHour(int h) {
+        return (h >= 9 && h <= 11) || (h >= 17 && h <= 20);
+    }
+
+    // ---- Duration calculation ----
+    void calcDuration() {
+        long diff = outT.toSeconds() - inT.toSeconds();
+        if (diff < 0) diff += 24L * 3600;
+        durationHours = max(1, static_cast<int>((diff + 3599) / 3600));
+    }
+
+    // ---- Fare calculation using rate table ----
+    int getFare() const {
+        int fare = 0;
+        int hour = inT.hh;
+        for (int i = 0; i < durationHours; i++) {
+            bool rush = isRushHour(hour);
+            if (isCar) fare += rush ? CAR_RUSH  : CAR_NORMAL;
+            else       fare += rush ? BIKE_RUSH : BIKE_NORMAL;
+            if (++hour >= 24) hour = 0;
+        }
+        return fare;
+    }
+
+    // ---- Serialise to file line ----
+    string toFileLine() const {
+        ostringstream os;
+        os << token << "|" << owner << "|" << vno << "|" << isCar << "|"
+           << inT.hh  << " " << inT.mm  << " " << inT.ss  << "|"
+           << outT.hh << " " << outT.mm << " " << outT.ss << "|"
+           << date.dd << " " << date.mm << " " << date.yy;
+        return os.str();
+    }
+
+    // ---- Interactive input ----
+    void inputDetails() {
+        cout << "Owner Name : ";
+        getline(cin, owner);
+        if (owner.empty()) owner = "Unknown";
+
+        inT  = Time::readFromUser("Arrival Time");
+        outT = Time::readFromUser("Exit Time   ");
+        date = Date::readFromUser();
+        calcDuration();
+    }
+
+    // ---- Display ----
+    void display() const {
+        printDivider();
+        cout << " Token      : " << token                        << "\n"
+             << " Vehicle No : " << vno                          << "\n"
+             << " Type       : " << (isCar ? "Car" : "Bike")    << "\n"
+             << " Owner      : " << owner                        << "\n"
+             << " Date       : " << date.toString()              << "\n"
+             << " In / Out   : " << inT.toString()
+                         << "  ->  " << outT.toString()          << "\n"
+             << " Duration   : " << durationHours << " hour(s)"  << "\n"
+             << " Total Fare : Rs " << getFare()                 << "\n";
+        printDivider();
+    }
+};
+
