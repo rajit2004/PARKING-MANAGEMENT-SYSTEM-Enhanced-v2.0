@@ -99,3 +99,43 @@ void showExitMessage() {
     cout << string(MENU_WIDTH, '=') << "\n\n";
     Sleep(1000);
 }
+
+// ============================================================
+//  INPUT HELPERS
+// ============================================================
+
+// Returns a validated integer; re-prompts on bad input
+int getIntInput(const string& prompt = "") {
+    if (!prompt.empty()) cout << prompt;
+    string line;
+    while (true) {
+        if (!getline(cin, line)) return 0;
+        if (!line.empty()) {
+            try { return stoi(line); }
+            catch (...) {}
+        }
+        cout << "[!] Invalid input. Enter a number: ";
+    }
+}
+
+string toUpperStr(const string& s) {
+    string r = s;
+    transform(r.begin(), r.end(), r.begin(), ::toupper);
+    return r;
+}
+
+// Masked password entry via _getch()
+string getMaskedInput() {
+    string pass;
+    while (true) {
+        int ch = _getch();
+        if (ch == 13) { cout << "\n"; break; }
+        if (ch == 8) {
+            if (!pass.empty()) { pass.pop_back(); cout << "\b \b"; }
+        } else if (isprint(static_cast<unsigned char>(ch))) {
+            pass.push_back(static_cast<char>(ch));
+            cout << "*";
+        }
+    }
+    return pass;
+}
