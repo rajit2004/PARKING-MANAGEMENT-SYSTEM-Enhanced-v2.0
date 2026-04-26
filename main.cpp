@@ -316,3 +316,120 @@ public:
     }
 };
 
+// ============================================================
+//  CLASS: SecuritySystem  (passwords persist to config.txt)
+// ============================================================
+class SecuritySystem {
+    string adminPass = "1234";
+    string staffPass = "0000";
+
+    void loadPasswords() {
+        ifstream f(CONFIG_FILE);
+        if (!f) return;
+        string a, s;
+        if (getline(f, a) && getline(f, s)) {
+            adminPass = a;
+            staffPass = s;
+        }
+    }
+
+    void savePasswords() const {
+        ofstream f(CONFIG_FILE);
+        if (f) { f << adminPass << "\n" << staffPass << "\n"; }
+    }
+
+public:
+    SecuritySystem() { loadPasswords(); }
+
+    // Returns 1 = Admin, 2 = Staff; exits on lockout
+    int login() const {
+        while (true) {
+            printHeader("SYSTEM LOGIN");
+            cout << "Username (admin / staff): ";
+            string user;
+            getline(cin, user);
+            user = toUpperStr(user);
+
+            if (user != "ADMIN" && user != "STAFF") {
+                cout << "\n[!] Invalid username. Enter 'admin' or 'staff'.\n";
+                pauseScreen();
+                continue;
+            }
+
+            for (int attempt = 1; attempt <= MAX_LOGIN_TRIES; attempt++) {
+                printHeader("SYSTEM LOGIN");
+                cout << "Username : " << user << "\n";
+                cout << "Password : ";
+                string pass = getMaskedInput();
+
+                bool ok = (user == "ADMIN" && pass == adminPass)
+                       || (user == "STAFF" && pass == staffPass);
+                if (ok) return (user == "ADMIN") ? 1 : 2;
+
+                int left = MAX_LOGIN_TRIES - attempt;
+                if (left == 0) {
+                    cout << "\n[!] Security lockout — too many failed attempts. Exiting.\n";
+                    Sleep(1500);
+                    exit(0);
+                }
+                cout << "\n[!] Wrong password. " << left << " attempt(s) remaining.\n";
+                pauseScreen();
+            }
+        }
+    }
+
+    void changePassword() {
+        while (true) {
+            printHeader("CHANGE PASSWORD");
+            cout << "Username (admin / staff) or '0' to go back: ";
+            string user;
+            getline(cin, user);
+            if (user == "0") return;
+            user = toUpperStr(user);
+
+            if (user != "ADMIN" && user != "STAFF") {
+                cout << "\n[!] Invalid username.\n";
+                pauseScreen();
+                continue;
+            }
+
+            for (int attempt = 1; attempt <= MAX_LOGIN_TRIES; attempt++) {
+                cout << "Current password: ";
+                string oldP = getMaskedInput();
+
+                bool ok = (user == "ADMIN" && oldP == adminPass)
+                       || (user == "STAFF" && oldP == staffPass);
+                if (ok) {
+                    string newP;
+                    while (newP.empty()) {
+                        cout << "New password (cannot be empty): ";
+                        newP = getMaskedInput();
+                    }
+                    string confirm;
+                    cout << "Confirm new password: ";
+                    confirm = getMaskedInput();
+                    if (newP != confirm) {
+                        cout << "\n[!] Passwords do not match. Try again.\n";
+                        pauseScreen();
+                        return;
+                    }
+                    if (user == "ADMIN") adminPass = newP;
+                    else                 staffPass = newP;
+                    savePasswords();
+                    cout << "\n[+] Password changed and saved successfully!\n";
+                    pauseScreen();
+                    return;
+                }
+
+                int left = MAX_LOGIN_TRIES - attempt;
+                if (left == 0) {
+                    cout << "\n[!] Too many wrong attempts. Exiting.\n";
+                    Sleep(1500);
+                    exit(0);
+                }
+                cout << "[!] Wrong password. " << left << " attempt(s) remaining.\n";
+            }
+        }
+    }
+};
+
