@@ -139,3 +139,81 @@ string getMaskedInput() {
     }
     return pass;
 }
+
+// ============================================================
+//  CLASS: Time
+// ============================================================
+class Time {
+public:
+    int hh = 0, mm = 0, ss = 0;
+
+    long toSeconds() const { return hh * 3600L + mm * 60 + ss; }
+
+    string toString() const {
+        ostringstream os;
+        os << setfill('0') << setw(2) << hh << ":"
+           << setfill('0') << setw(2) << mm << ":"
+           << setfill('0') << setw(2) << ss;
+        return os.str();
+    }
+
+    static bool isValid(int h, int m, int s) {
+        return h >= 0 && h <= 23 && m >= 0 && m <= 59 && s >= 0 && s <= 59;
+    }
+
+    // Read from stream with validation loop
+    static Time readFromUser(const string& label) {
+        Time t;
+        while (true) {
+            cout << label << " (HH MM SS): ";
+            if (cin >> t.hh >> t.mm >> t.ss) {
+                cin.ignore(1000, '\n');
+                if (Time::isValid(t.hh, t.mm, t.ss)) return t;
+            } else {
+                cin.clear();
+                cin.ignore(1000, '\n');
+            }
+            cout << "[!] Invalid time. Try again.\n";
+        }
+    }
+};
+
+// ============================================================
+//  CLASS: Date
+// ============================================================
+class Date {
+public:
+    int dd = 0, mm = 0, yy = 0;
+
+    string toString() const {
+        ostringstream os;
+        os << setfill('0') << setw(2) << dd << "/"
+           << setfill('0') << setw(2) << mm << "/" << yy;
+        return os.str();
+    }
+
+    static bool isValid(int d, int m, int y) {
+        if (m < 1 || m > 12 || d < 1 || y < 1) return false;
+        int days[] = {0,31,28,31,30,31,30,31,31,30,31,30,31};
+        if (m == 2 && ((y % 4 == 0 && y % 100 != 0) || y % 400 == 0))
+            days[2] = 29;
+        return d <= days[m];
+    }
+
+    // Read from stream with validation loop
+    static Date readFromUser() {
+        Date d;
+        while (true) {
+            cout << "Date (DD MM YYYY): ";
+            if (cin >> d.dd >> d.mm >> d.yy) {
+                cin.ignore(1000, '\n');
+                if (Date::isValid(d.dd, d.mm, d.yy)) return d;
+            } else {
+                cin.clear();
+                cin.ignore(1000, '\n');
+            }
+            cout << "[!] Invalid date. Try again.\n";
+        }
+    }
+};
+
