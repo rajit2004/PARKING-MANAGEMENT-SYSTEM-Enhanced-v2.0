@@ -53,3 +53,49 @@ constexpr int  CAR_NORMAL       = 20;
 constexpr int  CAR_RUSH         = 30;
 const string   DATA_FILE        = "parking_data.txt";
 const string   CONFIG_FILE      = "config.txt";     // stores passwords
+
+// ============================================================
+//  UI HELPERS
+// ============================================================
+void printCentered(const string& text) {
+    int len = static_cast<int>(text.length());
+    int padding = (len >= MENU_WIDTH) ? 0 : (MENU_WIDTH - len) / 2;
+    cout << string(padding, ' ') << text << "\n";
+}
+
+void printHeader(const string& title) {
+    system("cls");
+    cout << string(MENU_WIDTH, '=') << "\n";
+    printCentered(title);
+    cout << string(MENU_WIDTH, '=') << "\n";
+}
+
+void printDivider() {
+    cout << string(MENU_WIDTH, '-') << "\n";
+}
+
+void pauseScreen() {
+    cout << "\nPress any key to continue...";
+    _getch();
+}
+
+void showWelcome() {
+    system("cls");
+    cout << "\n\n";
+    cout << string(MENU_WIDTH, '=') << "\n";
+    printCentered("WELCOME TO PARKING MANAGEMENT SYSTEM");
+    printCentered("Manage Vehicles Efficiently");
+    cout << string(MENU_WIDTH, '=') << "\n";
+    printCentered("Loading...");
+    cout << "\n\n";
+    Sleep(1200);
+}
+
+void showExitMessage() {
+    system("cls");
+    cout << "\n" << string(MENU_WIDTH, '=') << "\n";
+    printCentered("THANK YOU FOR USING OUR SYSTEM");
+    printCentered("HAVE A GREAT DAY!");
+    cout << string(MENU_WIDTH, '=') << "\n\n";
+    Sleep(1000);
+}
