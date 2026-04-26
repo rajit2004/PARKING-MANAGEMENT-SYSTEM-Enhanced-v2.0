@@ -433,3 +433,281 @@ public:
     }
 };
 
+// ============================================================
+//  CLASS: ParkingSystem
+// ============================================================
+class ParkingSystem {
+    vector<Vehicle>            vehicles;
+    unordered_map<int, size_t> tokenIndex;  // token -> index in vehicles
+    int nextToken = 100;
+
+    // ---- Helpers ----
+    bool isDuplicate(const string& vno) const {
+        return any_of(vehicles.begin(), vehicles.end(),
+            [&](const Vehicle& v){ return v.getVNo() == vno; });
+    }
+
+    static bool isValidPlate(const string& plate) {
+        // Indian number plate: e.g. MH12 AB 1234
+        static const regex pattern(R"(^[A-Z]{2}[0-9]{2} [A-Z]{1,3} [0-9]{1,7}$)");
+        return regex_match(plate, pattern);
+    }
+
+    void rebuildIndex() {
+        tokenIndex.clear();
+        for (size_t i = 0; i < vehicles.size(); i++)
+            tokenIndex[vehicles[i].getToken()] = i;
+    }
+
+    // ---- Persistence ----
+    void saveToFile() const {
+        ofstream f(DATA_FILE);
+        if (!f) { cerr << "[!] Could not save data.\n"; return; }
+        for (const auto& v : vehicles)
+            f << v.toFileLine() << "\n";
+    }
+
+    void loadFromFile() {
+        ifstream f(DATA_FILE);
+        if (!f) return;
+        string line;
+        int lineNo = 0;
+        while (getline(f, line)) {
+            lineNo++;
+            if (line.empty()) continue;
+            istringstream ss(line);
+            string seg;
+            vector<string> data;
+            while (getline(ss, seg, '|')) data.push_back(seg);
+            if (data.size() != 7) {
+                cerr << "[!] Skipping malformed line " << lineNo << " in data file.\n";
+                continue;
+            }
+            try {
+                int    t  = stoi(data[0]);
+                string o  = data[1];
+                string v  = data[2];
+                bool   c  = (data[3] == "1");
+                int h1,m1,s1, h2,m2,s2, dd,mm,yy;
+                istringstream(data[4]) >> h1 >> m1 >> s1;
+                istringstream(data[5]) >> h2 >> m2 >> s2;
+                istringstream(data[6]) >> dd >> mm >> yy;
+                vehicles.emplace_back(t, o, v, c, h1,m1,s1, h2,m2,s2, dd,mm,yy);
+                if (t >= nextToken) nextToken = t + 1;
+            } catch (...) {
+                cerr << "[!] Parse error on line " << lineNo << " — skipped.\n";
+            }
+        }
+        rebuildIndex();
+    }
+
+    // ---- Find vehicle by token (O(1)) ----
+    Vehicle* findByToken(int token) {
+        auto it = tokenIndex.find(token);
+        if (it == tokenIndex.end()) return nullptr;
+        return &vehicles[it->second];
+    }
+
+    const Vehicle* findByToken(int token) const {
+        auto it = tokenIndex.find(token);
+        if (it == tokenIndex.end()) return nullptr;
+        return &vehicles[it->second];
+    }
+
+    // ---- Find vehicle by plate number ----
+    const Vehicle* findByPlate(const string& plate) const {
+        for (const auto& v : vehicles)
+            if (v.getVNo() == plate) return &v;
+        return nullptr;
+    }
+
+public:
+    ParkingSystem() { loadFromFile(); }
+
+    int availableSlots() const {
+        return MAX_CAPACITY - static_cast<int>(vehicles.size());
+    }
+
+    // ---- Show rates ----
+    static void showRates() {
+        printHeader("PARKING RATES");
+        cout << "  TYPE  |  NORMAL (Per Hr)  |  RUSH HOUR (Per Hr)\n";
+        printDivider();
+        cout << "  BIKE  |      Rs " << setw(3) << BIKE_NORMAL
+             << "        |       Rs " << setw(3) << BIKE_RUSH << "\n";
+        cout << "  CAR   |      Rs " << setw(3) << CAR_NORMAL
+             << "        |       Rs " << setw(3) << CAR_RUSH  << "\n";
+        printDivider();
+        cout << "  Rush hours: 09:00-11:00 and 17:00-20:00\n";
+        printDivider();
+        pauseScreen();
+    }
+
+    // ---- Add vehicle ----
+    void addVehicle() {
+        printHeader("ADD NEW VEHICLE");
+
+        if (availableSlots() <= 0) {
+            cout << "\n[!] Parking is FULL. No available slots.\n";
+            pauseScreen();
+            return;
+        }
+
+        cout << "  Available Slots : " << availableSlots()
+             << " / " << MAX_CAPACITY << "\n";
+        cout << "  Next Token      : " << nextToken << "\n\n";
+
+        cout << "Vehicle type:\n  1. Car\n  2. Bike\n";
+        int type = getIntInput("Select: ");
+        if (type != 1 && type != 2) {
+            cout << "\n[!] Invalid choice.\n";
+            pauseScreen();
+            return;
+        }
+
+        string plate;
+        while (true) {
+            cout << "Vehicle number (e.g. MH12 AB 1234): ";
+            getline(cin, plate);
+            plate = toUpperStr(plate);
+            if (isValidPlate(plate)) break;
+            cout << "[!] Invalid format. Example: MH12 AB 1234\n";
+        }
+
+        if (isDuplicate(plate)) {
+            cout << "\n[!] This vehicle is already parked.\n";
+            pauseScreen();
+            return;
+        }
+
+        Vehicle v(nextToken, type == 1);
+        v.setVNo(plate);
+        v.inputDetails();
+
+        tokenIndex[nextToken] = vehicles.size();
+        vehicles.push_back(v);
+        nextToken++;
+        saveToFile();
+
+        cout << "\n[+] Vehicle added. Token: " << v.getToken() << "\n";
+        pauseScreen();
+    }
+
+    // ---- Search by token ----
+    void searchByToken() const {
+        printHeader("SEARCH BY TOKEN");
+        int t = getIntInput("Enter token: ");
+        const Vehicle* v = findByToken(t);
+        if (v) { v->display(); }
+        else   { cout << "\n[!] No vehicle found with token " << t << ".\n"; }
+        pauseScreen();
+    }
+
+    // ---- NEW: Search by plate number ----
+    void searchByPlate() const {
+        printHeader("SEARCH BY VEHICLE NUMBER");
+        cout << "Enter vehicle number: ";
+        string plate;
+        getline(cin, plate);
+        plate = toUpperStr(plate);
+        const Vehicle* v = findByPlate(plate);
+        if (v) { v->display(); }
+        else   { cout << "\n[!] No vehicle found with plate " << plate << ".\n"; }
+        pauseScreen();
+    }
+
+    // ---- Checkout ----
+    void checkout() {
+        printHeader("VEHICLE CHECKOUT");
+        cout << "Enter token(s) separated by spaces: ";
+        string line;
+        getline(cin, line);
+
+        istringstream ss(line);
+        vector<int> tokens;
+        int t;
+        while (ss >> t) tokens.push_back(t);
+        sort(tokens.begin(), tokens.end());
+        tokens.erase(unique(tokens.begin(), tokens.end()), tokens.end());
+
+        if (tokens.empty()) {
+            cout << "\n[!] No tokens entered.\n";
+            pauseScreen();
+            return;
+        }
+
+        vector<int> valid;
+        int grandTotal = 0;
+        cout << "\n===== CHECKOUT SUMMARY =====\n";
+        for (int tok : tokens) {
+            const Vehicle* v = findByToken(tok);
+            if (v) {
+                v->display();
+                grandTotal += v->getFare();
+                valid.push_back(tok);
+            } else {
+                cout << "  Token " << tok << ": not found — skipped.\n";
+            }
+        }
+
+        if (valid.empty()) {
+            cout << "\n[!] No valid tokens found.\n";
+            pauseScreen();
+            return;
+        }
+
+        printDivider();
+        cout << " Vehicles   : " << valid.size() << "\n";
+        cout << " Grand Total: Rs " << grandTotal << "\n";
+        printDivider();
+        cout << "Confirm checkout? (y/n): ";
+        string confirm;
+        getline(cin, confirm);
+
+        if (toUpperStr(confirm) == "Y") {
+            vehicles.erase(
+                remove_if(vehicles.begin(), vehicles.end(), [&](const Vehicle& v){
+                    return find(valid.begin(), valid.end(), v.getToken()) != valid.end();
+                }),
+                vehicles.end()
+            );
+            rebuildIndex();
+            saveToFile();
+            cout << "\n[+] Checkout complete!\n";
+        } else {
+            cout << "\n[-] Cancelled.\n";
+        }
+        pauseScreen();
+    }
+
+    // ---- Full report ----
+    void report() const {
+        printHeader("FULL PARKING REPORT");
+        if (vehicles.empty()) {
+            cout << "\n[i] No vehicles currently parked.\n";
+            pauseScreen();
+            return;
+        }
+
+        int cars = 0, bikes = 0, revenue = 0;
+        for (const auto& v : vehicles) {
+            v.display();
+            if (v.getIsCar()) cars++;
+            else              bikes++;
+            revenue += v.getFare();
+        }
+
+        printDivider();
+        cout << " SUMMARY\n";
+        printDivider();
+        cout << " Cars          : " << cars                            << "\n"
+             << " Bikes         : " << bikes                           << "\n"
+             << " Total parked  : " << vehicles.size()                 << "\n"
+             << " Slots free    : " << availableSlots()
+                                    << " / " << MAX_CAPACITY           << "\n"
+             << " Total revenue : Rs " << revenue                      << "\n";
+        printDivider();
+        pauseScreen();
+    }
+};
+
