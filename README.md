@@ -26,14 +26,14 @@ Version 2.0 is not just an upgrade — it's a full rewrite with a cleaner archit
 - 🐛 Multiple bug fixes from v1 (lockout counter, empty password, stream errors)
 
 ---
+
 ## 📸 Screenshots
 
-| | |
+|  |  |
 |--|--|
-| **Main Menu** | **Login & Admin Dashboard** |
-| ![Main Menu](Screenshots/Screenshot%20(34).png) | ![Login & Dashboard](Screenshots/Screenshot%20(35).png) |
-| **Search by Token** | **Vehicle Checkout** |
-| ![Search by Token](Screenshots/Screenshot%20(36).png) | ![Checkout](Screenshots/Screenshot%20(37).png) |
+| **Login & Dashboard** | **Vehicle Entry** |
+| **Fare Calculation** | **Parking Report** |
+
 ---
 
 ## 🚀 Features
@@ -129,8 +129,9 @@ Reports & revenue summary available at any time
 
 ```
 ParkingSystem-v2/
-├── parking1.cpp        # Complete application source (single file)
-├── parking_system.exe  # Prebuilt Windows executable
+├── main.cpp            # Complete application source (single file)
+├── Screenshots/        # App screenshots
+├── .gitignore
 ├── parking_data.txt    # Auto-generated — stores parked vehicles
 ├── config.txt          # Auto-generated — stores login passwords
 └── README.md
@@ -149,7 +150,7 @@ ParkingSystem-v2/
 ### Compile & Run
 
 ```bash
-g++ parking1.cpp -o parking_system.exe -std=c++17
+g++ main.cpp -o parking_system.exe -std=c++17
 ./parking_system.exe
 ```
 
