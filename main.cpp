@@ -765,3 +765,39 @@ void staffDashboard(ParkingSystem& parking) {
         }
     }
 }
+
+
+// ============================================================
+//  MAIN
+// ============================================================
+int main() {
+    SecuritySystem security;
+    ParkingSystem  parking;
+
+    showWelcome();
+
+    while (true) {
+        printHeader("MAIN MENU");
+        cout << " 1. Login\n"
+             << " 2. Change Password\n"
+             << " 3. View Parking Rates\n"
+             << " 4. Exit\n";
+        printDivider();
+        int choice = getIntInput("Choice: ");
+
+        switch (choice) {
+            case 1: {
+                int role = security.login();
+                if (role == 1) adminDashboard(parking);
+                else           staffDashboard(parking);
+                break;
+            }
+            case 2: security.changePassword();   break;
+            case 3: ParkingSystem::showRates();  break;
+            case 4: showExitMessage(); return 0;
+            default:
+                cout << "\n[!] Invalid choice.\n";
+                pauseScreen();
+        }
+    }
+}
