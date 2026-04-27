@@ -26,14 +26,14 @@ Version 2.0 is not just an upgrade — it's a full rewrite with a cleaner archit
 - 🐛 Multiple bug fixes from v1 (lockout counter, empty password, stream errors)
 
 ---
-
 ## 📸 Screenshots
 
-|  |  |
+| | |
 |--|--|
-| **Login & Dashboard** | **Vehicle Entry** |
-| **Fare Calculation** | **Parking Report** |
-
+| **Main Menu** | **Login & Admin Dashboard** |
+| ![Main Menu](Screenshots/Screenshot%20(34).png) | ![Login & Dashboard](Screenshots/Screenshot%20(35).png) |
+| **Search by Token** | **Vehicle Checkout** |
+| ![Search by Token](Screenshots/Screenshot%20(36).png) | ![Checkout](Screenshots/Screenshot%20(37).png) |
 ---
 
 ## 🚀 Features
