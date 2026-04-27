@@ -711,3 +711,57 @@ public:
     }
 };
 
+// ============================================================
+//  DASHBOARD MENUS
+// ============================================================
+void adminDashboard(ParkingSystem& parking) {
+    while (true) {
+        printHeader("ADMIN DASHBOARD");
+        cout << " 1. Add Vehicle\n"
+             << " 2. Search by Token\n"
+             << " 3. Search by Vehicle Number\n"
+             << " 4. Checkout (Remove Vehicle)\n"
+             << " 5. Full Parking Report\n"
+             << " 6. View Parking Rates\n"
+             << " 7. Logout\n";
+        printDivider();
+        int c = getIntInput("Choice: ");
+        switch (c) {
+            case 1: parking.addVehicle();       break;
+            case 2: parking.searchByToken();    break;
+            case 3: parking.searchByPlate();    break;
+            case 4: parking.checkout();         break;
+            case 5: parking.report();           break;
+            case 6: ParkingSystem::showRates(); break;
+            case 7: return;
+            default:
+                cout << "\n[!] Invalid choice.\n";
+                pauseScreen();
+        }
+    }
+}
+
+void staffDashboard(ParkingSystem& parking) {
+    while (true) {
+        printHeader("STAFF DASHBOARD");
+        cout << " 1. Add Vehicle\n"
+             << " 2. Search by Token\n"
+             << " 3. Search by Vehicle Number\n"
+             << " 4. Full Parking Report\n"
+             << " 5. View Parking Rates\n"
+             << " 6. Logout\n";
+        printDivider();
+        int c = getIntInput("Choice: ");
+        switch (c) {
+            case 1: parking.addVehicle();       break;
+            case 2: parking.searchByToken();    break;
+            case 3: parking.searchByPlate();    break;
+            case 4: parking.report();           break;
+            case 5: ParkingSystem::showRates(); break;
+            case 6: return;
+            default:
+                cout << "\n[!] Invalid choice.\n";
+                pauseScreen();
+        }
+    }
+}
